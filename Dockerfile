@@ -2,7 +2,7 @@
 
 # Both stages use the same Python image, so the virtual environment built
 # here runs in the final image, and Dependabot bumps them together.
-FROM python:3.12-slim-bookworm AS build
+FROM python:3.15-slim-bookworm AS build
 COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never \
@@ -16,7 +16,7 @@ COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --extra serve --no-editable
 
-FROM python:3.12-slim-bookworm
+FROM python:3.15-slim-bookworm
 RUN groupadd --system app && useradd --system --gid app --home-dir /app app
 WORKDIR /app
 COPY --from=build /app/.venv /app/.venv
