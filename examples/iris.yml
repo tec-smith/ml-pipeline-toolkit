@@ -1,0 +1,12 @@
+# Multiclass classification on a dataset bundled with scikit-learn.
+# The smallest possible config: everything else uses the defaults.
+#   mlpipeline run examples/iris.yml
+name: iris
+task: classification
+
+data:
+  source: sklearn:iris
+  target: target
+
+model:
+  type: logistic_regression

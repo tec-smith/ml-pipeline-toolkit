@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint, types and tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # The minimum version in pyproject.toml, and the latest release.
+        python: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --locked --extra serve
+      - run: make fmt-check
+      - run: make lint
+      - run: make typecheck
+      - run: make coverage
+      - name: Train every example
+        run: for config in examples/*.yml; do uv run mlpipeline run "$config"; done
+      - uses: actions/upload-artifact@v7
+        if: always() && matrix.python == '3.14'
+        with:
+          name: coverage
+          path: htmlcov/
+          retention-days: 7
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t ml-pipeline-toolkit .
+      - name: Train and serve in the image
+        run: |
+          docker compose up --build --detach --wait api
+          curl --fail --silent localhost:8000/health
+          docker compose down

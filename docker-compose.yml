@@ -1,0 +1,26 @@
+# A demo stack: train the churn example, then serve it.
+#   docker compose up --build
+#   curl localhost:8000/metadata
+services:
+  train:
+    build: .
+    image: ml-pipeline-toolkit
+    command: ["run", "examples/churn.yml", "--output-dir", "/models/churn"]
+    volumes:
+      - models:/models
+
+  api:
+    image: ml-pipeline-toolkit
+    depends_on:
+      train:
+        condition: service_completed_successfully
+    environment:
+      MODEL_DIR: /models/churn
+      MAX_BATCH_SIZE: 500
+    ports:
+      - "8000:8000"
+    volumes:
+      - models:/models:ro
+
+volumes:
+  models:

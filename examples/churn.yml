@@ -1,0 +1,42 @@
+# Binary classification on a CSV with mixed column types and missing values.
+#   mlpipeline run examples/churn.yml
+name: churn
+task: classification
+seed: 42
+
+data:
+  source: examples/data/churn.csv
+  target: churned
+  positive_class: "yes"
+  drop: [customer_id]
+  test_size: 0.2
+  stratify: true
+
+preprocessing:
+  numeric:
+    impute: median
+    scale: standard
+  categorical:
+    impute: constant
+    encode: onehot
+    max_categories: 10
+
+model:
+  type: hist_gradient_boosting
+  params:
+    max_iter: 100
+    early_stopping: false
+  search:
+    method: grid
+    cv: 5
+    scoring: roc_auc
+    params:
+      learning_rate: [0.05, 0.1]
+      max_depth: [3, null]
+
+evaluation:
+  cv_folds: 5
+  baseline: true
+
+output:
+  dir: artifacts/churn

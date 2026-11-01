@@ -1,0 +1,28 @@
+# Regression with a randomised hyperparameter search.
+#   mlpipeline run examples/diabetes.yml
+name: diabetes
+task: regression
+
+data:
+  source: sklearn:diabetes
+  target: target
+
+preprocessing:
+  numeric:
+    scale: robust
+
+model:
+  type: random_forest
+  params:
+    n_estimators: 200
+  search:
+    method: random
+    n_iter: 8
+    cv: 5
+    params:
+      max_depth: [4, 8, 16, null]
+      min_samples_leaf: [1, 3, 5, 10]
+      max_features: [0.33, 0.5, 1.0]
+
+evaluation:
+  cv_folds: 5
